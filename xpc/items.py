@@ -11,7 +11,7 @@ from scrapy import Field
 class PostItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    # pass
     table_name = 'posts'
     pid = Field()
     title = Field()
@@ -28,7 +28,7 @@ class PostItem(scrapy.Item):
 
 
 class ComposerItem(scrapy.Item):
-    table_name = "composer"
+    table_name = "composers"
     cid = Field()
     banner = Field()
     avatar = Field()
@@ -57,8 +57,8 @@ class CommentItem(scrapy.Item):
     cid = Field()
     avatar = Field()
     uname = Field()
-    create_at = Field()
+    created_at = Field()
     content = Field()
     like_counts = Field()
-    replay = Field()
+    reply = Field()
 
