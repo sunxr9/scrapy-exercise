@@ -26,10 +26,10 @@ class DiscoverySpider(scrapy.Spider):
                 # 将作品id 传入
                 request.meta['pid'] = pid
                 # Xpath
-                # request.meta['thumbnail'] = post.xpath('./a/img/@_src').get()
+                request.meta['thumbnail'] = post.xpath('./a/img/@_src').get()
                 # css
                 # 缩略图传递
-                request.meta['thumbnail'] = post.css('a img::attr(src)').get()
+                # request.meta['thumbnail'] = post.css('a img::attr(src)').get()
                 # 持续时长
                 request.meta['duration'] = post.xpath('.//span[contains(@class, "duration")]/text()').get()
                 yield request
@@ -43,7 +43,8 @@ class DiscoverySpider(scrapy.Spider):
         # 缩略图
         post['thumbnail'] = response.meta['thumbnail']
         # 时长
-        post['duration'] = response.meta["duration"]
+        minutes, seconds, *_ = response.meta["duration"].split("'")
+        post['duration'] = int(minutes) * 60 + int(seconds)
         # 视频链接
         post['video'] = response.xpath("//video[@id='xpc_video']/@src").get()
         # Xpath
@@ -61,19 +62,20 @@ class DiscoverySpider(scrapy.Spider):
         # 分类
         cates = response.css('span[class*=cate] a::text').extract()
         # print(cates)
-        post['category'] = "-".join([cate.strip() for cate in cates])
+        post['category'] = "-".join([strip(cate) for cate in cates])
         # 创建时间
-        post['create_at'] = response.xpath('//span[contains(@class, "update-time")]/i/text()').get()
+        post['created_at'] = response.xpath('//span[contains(@class, "update-time")]/i/text()').get()
         # 点击次数
         post['play_counts'] = response.xpath('//i[contains(@class, "play-counts")]/@data-curplaycounts').get()
         # 喜欢次数
         post['like_counts'] = response.xpath('//span[contains(@class, "like-counts")]/@data-counts').get()
         # 详情
-        post['description'] = response.xpath('//p[contains(@class, "desc")]/text()').get()
+        post['description'] = strip(response.xpath('//p[contains(@class, "desc")]/text()').get())
         yield post
-        # 作品的创作人列表
-        creator_list = response.xpath('//ul[contains(@class, "creator-list")]/li')
 
+        # 作品的创作人列表
+        creator_list = response.xpath('//div[contains(@class, "filmplay-creator")]/ul/li')
+        # 作品人路径
         user_url = 'http://www.xinpianchang.com/u%s?from=articleList'
         for creator in creator_list:
             u_id = creator.xpath('.//a/@data-userid').get()
@@ -84,6 +86,7 @@ class DiscoverySpider(scrapy.Spider):
             request.meta['u_id'] = u_id
             yield request
             cr = CopyrightItem()
+            cr['pcid'] = '%s_%s' %(u_id, pid)
             # 创建关联xinxi
             # 用户id
             cr['cid'] = u_id
@@ -92,7 +95,7 @@ class DiscoverySpider(scrapy.Spider):
             # 当前用户在当前作品中的工作
             cr['roles'] = creator.xpath('.//span[contains(@class, "roles")]/text()').get()
             yield cr
-        comment_url = 'http://www.xinpianchang.com/article/filmplay/ts-get'
+        comment_url = 'http://www.xinpianchang.com/article/filmplay/ts-getCommentApi?id=%s&ajax=0&page=1'
         request = Request(comment_url % pid, callback=self.parse_comment)
         request.meta['pid'] = pid
         yield request
@@ -103,16 +106,24 @@ class DiscoverySpider(scrapy.Spider):
         comments = result['data']['list']
         for c in comments:
             comment = CommentItem()
+            # 评论id
             comment["commentid"] = c['commentid']
+            # 作品id
             comment['pid'] = response.meta['pid']
+            # 用户id
             comment['cid'] = c['userInfo']['userid']
+            # 评论用户名
             comment['uname'] = c['userInfo']['username']
+            # 评论头像
             comment['avatar'] = c['userInfo']['face']
+            # 时间
             comment['created_at'] = c['addtime']
+            #
             comment['content'] = c['content']
+            # 喜欢次数
             comment['like_counts'] = c['count_approve']
-            if c['replay']:
-                comment['replay'] = c['replay']['commentid']
+            if c['reply']:
+                comment['reply'] = c['reply']['commentid']
             yield comment
 
             # 判断有没有下一页，
@@ -121,7 +132,7 @@ class DiscoverySpider(scrapy.Spider):
                 # 递归抓取所有评论
                 request = Request(next_page, callback=self.parse_comment)
                 # 将作品id传入
-                request.meta['pid'] = request.meta['pid']
+                request.meta['pid'] = response.meta['pid']
                 yield request
 
     def auth_parse(self, response):
@@ -131,23 +142,26 @@ class DiscoverySpider(scrapy.Spider):
         # 头部背景
         composer['banner'] = response.xpath('//div[@class="banner-wrap"]/@style').get()[21:-1]
         # 头像
-        composer['avater'] = response.xpath('//span[@class="avator-wrap-s"]/img/@src').get()
+        composer['avatar'] = response.xpath('//span[@class="avator-wrap-s"]/img/@src').get()
         # 用户名
         composer['name'] = response.xpath('//p[contains(@class, "creator-name")]/text()').get()
         # 介绍
         composer['intro'] = response.xpath('//p[contains(@class, "creator-desc")]/text()').get()
         # 喜欢人数
-        composer['lick_counts'] = response.xpath('//span[contains(@class, "like-counts")]/text()').get()
+        composer['like_counts'] = clean(response.xpath('//span[contains(@class, "like-counts")]/text()').get())
         # 粉丝
-        composer['fans_counts'] = response.xpath('//span[contains(@class, "fans-counts")]/text()').get()
+        composer['fans_counts'] = clean(response.xpath('//span[contains(@class, "fans-counts")]/text()').get())
         # 关注人数
-        composer['follow_counts'] = response.xpath('//span[contains(@class, "follow-wrap")]/span[2]/text()').get()
+        # composer['follow_counts'] = response.xpath('//span[contains(@class, "follow-wrap")]/span[2]/text()').get()
+        composer['follow_counts'] = clean(response.xpath('//span[@class="follow-wrap"]/span[2]/text()').get())
         # 地址
-        composer['location'] = response.xpath('//p[contains(@class, "creator-detail")]/span[5]/text()').get()
+        # composer['location'] = response.xpath('//p[contains(@class, "creator-detail")]/span[5]/text()').get()
+        composer['location'] = response.xpath('//span[contains(@class, "icon-location")]/following-sibling::span[1]/text()').get()
         # 职业名称
-        composer['career'] = response.xpath('//p[contains(@class, "creator-detail")]/span[7]/text()').get()
-
+        # composer['career'] = response.xpath('//p[contains(@class, "creator-detail")]/span[7]/text()').get()
+        composer['career'] = response.xpath('//span[contains(@class, "icon-career")]/following-sibling::span[1]/text()').get()
         yield composer
+
 
 def strip(s):
     if s:
