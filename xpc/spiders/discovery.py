@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+
 import scrapy
 from scrapy import Request
 
@@ -26,7 +28,8 @@ class DiscoverySpider(scrapy.Spider):
     def parse_post(self, response):
         # print(response.text)
         post = {}
-        post['pid'] = response.meta["pid"]
+        pid = response.meta["pid"]
+        post['pid'] = pid
         post['thumbnail'] = response.meta['thumbnail']
         post['duration'] = response.meta["duration"]
         post['video'] = response.xpath("//video[@id='xpc_video']/@src").get()
@@ -45,7 +48,7 @@ class DiscoverySpider(scrapy.Spider):
         post['create_at'] = response.xpath('//span[contains(@class, "update-time")]/i/text()').get()
         post['play_counts'] = response.xpath('//i[contains(@class, "play-counts")]/@data-curplaycounts').get()
         post['like_counts'] = response.xpath('//span[contains(@class, "like-counts")]/@data-counts').get()
-
+        post['description'] = response.xpath('//p[contains(@class, "desc")]/text()').get()
         yield post
 
         creator_list = response.xpath('//ul[contains(@class, "creator-list")]/li')
@@ -55,9 +58,40 @@ class DiscoverySpider(scrapy.Spider):
             u_id = creator.xpath('.//a/@data-userid').get()
             # u_url = creator.xpath('.//a/@href').get()
             # print(u_url)
+            # 获取作者详细信息
             request = Request(user_url % u_id, callback=self.auth_parse)
             request.meta['u_id'] = u_id
             yield request
+            cr = {}
+            # 创建关联xinxi
+            # 用户id
+            cr['cid'] = u_id
+            # 作品id
+            cr['pid'] = pid
+            # 当前用户在当前作品中的工作
+            cr['roles'] = creator.xpath('.//span[contains(@class, "roles")]/text()').get()
+            yield cr
+
+        comment_list = response.xpath('//ul[@class="comment-list"]/li')
+
+
+
+    def parse_comment(self, response):
+        result = json.loads(response.text)
+        comments = result['data']['list']
+        for c in comments:
+            comment = {}
+            comment["commentid"] = c['commentid']
+            comment['pid'] = response.meta['pid']
+            comment['cid'] = c['userInfo']['userid']
+            comment['uname'] = c['userInfo']['username']
+            comment['avatar'] = c['userInfo']['face']
+            comment['created_at'] = c['addtime']
+            comment['content'] = c['content']
+            comment['like_counts'] = c['count_approve']
+            if c['replay']:
+                comment['replay'] = c['replay']['commentid']
+            yield comment
 
     def auth_parse(self, response):
         composer = {}
@@ -83,3 +117,11 @@ class DiscoverySpider(scrapy.Spider):
 
         yield composer
 
+def strip(s):
+    if s:
+        return s.strip()
+
+
+def clean(string):
+    if string:
+        return string.replace(",", '')
