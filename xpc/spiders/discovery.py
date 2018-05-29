@@ -3,6 +3,8 @@ import json
 
 import scrapy
 from scrapy import Request
+from ..items import PostItem, CommentItem, ComposerItem, CopyrightItem
+
 
 class DiscoverySpider(scrapy.Spider):
     name = 'discovery'
@@ -34,7 +36,7 @@ class DiscoverySpider(scrapy.Spider):
 
     def parse_post(self, response):
         # print(response.text)
-        post = {}
+        post = PostItem()
         # 作品id
         pid = response.meta["pid"]
         post['pid'] = pid
@@ -81,7 +83,7 @@ class DiscoverySpider(scrapy.Spider):
             request = Request(user_url % u_id, callback=self.auth_parse)
             request.meta['u_id'] = u_id
             yield request
-            cr = {}
+            cr = CopyrightItem()
             # 创建关联xinxi
             # 用户id
             cr['cid'] = u_id
@@ -100,7 +102,7 @@ class DiscoverySpider(scrapy.Spider):
         result = json.loads(response.text)
         comments = result['data']['list']
         for c in comments:
-            comment = {}
+            comment = CommentItem()
             comment["commentid"] = c['commentid']
             comment['pid'] = response.meta['pid']
             comment['cid'] = c['userInfo']['userid']
@@ -123,7 +125,7 @@ class DiscoverySpider(scrapy.Spider):
                 yield request
 
     def auth_parse(self, response):
-        composer = {}
+        composer = ComposerItem()
         # 用户id
         composer['cid'] = response.meta['u_id']
         # 头部背景
