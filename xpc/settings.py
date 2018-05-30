@@ -25,7 +25,7 @@ HTTPPROXY_ENABLED = True
 
 PROXIES = [
    'http://47.100.185.114:1703',
-   'http://211.159.154.1641703',
+   'http://211.159.154.164:1703',
    'http://47.100.173.4:1703',
    'http://47.97.253.250:1703',
    'http://203.195.162.28:1703',
@@ -64,15 +64,15 @@ CONCURRENT_REQUESTS = 4
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-SPIDER_MIDDLEWARES = {
-   'xpc.middlewares.RandomProxyMiddleware': 700,
-}
+# SPIDER_MIDDLEWARES = {
+#    'xpc.middlewares.XpcSpiderMiddleware': 543,
+# }
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'xpc.middlewares.XpcDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'xpc.middlewares.RandomProxyMiddleware': 702,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
