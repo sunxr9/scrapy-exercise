@@ -110,6 +110,8 @@ class RandomProxyMiddleware(object):
         self.proxies = settings.getlist('PROXIES')
         if not self.proxies:
             raise NotConfigured
+        self.stats = {}.fromkeys(self.proxies, 0)
+        self.max_failed = 3
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -119,4 +121,28 @@ class RandomProxyMiddleware(object):
 
     def process_request(self, request, spider):
         request.meta['proxy'] = random.choice(self.proxies)
-        print("use %s !!!!!!!!!!!!" % request.meta["proxy"])
+        print("use %s -----------------------------------------" % request.meta["proxy"])
+
+    def process_response(self, request, response, spider):
+        cur_proxy = request.meta["proxy"]
+        if response.status >= 400:
+            self.stats[cur_proxy] += 1
+        if self.stats[cur_proxy] > self.max_failed:
+            self.remove_proxy(cur_proxy)
+        if response.status < 400:
+            return response
+        del request.meta["proxy"]
+        return request
+
+    def process_exception(self, request, exception, spider):
+        cur_proxy = request.meta["proxy"]
+        print('raise exception: %s when use %s' % (exception, cur_proxy))
+        self.remove_proxy(cur_proxy)
+        del request.meta["proxy"]
+        return request
+
+    def remove_proxy(self, cur_proxy):
+        if cur_proxy in self.proxies:
+            self.proxies.remove(cur_proxy)
+            print('proxy %s removed from proxies list' % cur_proxy)
+
