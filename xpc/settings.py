@@ -22,6 +22,23 @@ USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 ROBOTSTXT_OBEY = False
 
 HTTPPROXY_ENABLED = True
+
+PROXIES = [
+   'http://47.100.185.114:1703',
+   'http://211.159.154.1641703',
+   'http://47.100.173.4:1703',
+   'http://47.97.253.250:1703',
+   'http://203.195.162.28:1703',
+   'http://140.143.143.19:1703',
+   'http://106.15.188.107:1703',
+   'http://47.100.168.105:1703',
+   'http://47.100.176.209:1703',
+   'http://47.100.42.205:1703',
+   'http://47.100.126.62:1703',
+   'http://47.100.169.34:1703',
+   'http://101.132.193.81:1703',
+
+]
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 4
 
@@ -47,9 +64,9 @@ CONCURRENT_REQUESTS = 4
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-# SPIDER_MIDDLEWARES = {
-#    'xpc.middlewares.XpcSpiderMiddleware': 543,
-# }
+SPIDER_MIDDLEWARES = {
+   'xpc.middlewares.RandomProxyMiddleware': 700,
+}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
