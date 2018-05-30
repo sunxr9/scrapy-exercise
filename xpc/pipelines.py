@@ -60,7 +60,7 @@ class MysqlPipeline(object):
             ','.join(['{}=%s'.format(k) for k in cols])
         )
         self.cur.execute(sql, values * 2)
-        print(self.cur._last_executed)
+        # print(self.cur._last_executed)
         self.conn.commit()
 
         return item
