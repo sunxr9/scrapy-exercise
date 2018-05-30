@@ -6,6 +6,8 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+from scrapy.exceptions import NotConfigured
+import random
 
 
 class XpcSpiderMiddleware(object):
@@ -101,3 +103,20 @@ class XpcDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+class RandomProxyMiddleware(object):
+    def __init__(self, settings):
+        self.proxies = settings.getlist('PROXIES')
+        if not self.proxies:
+            raise NotConfigured
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        if not crawler.settings.getbool('HTTPPROXY_ENABLED'):
+            raise NotConfigured
+        return cls(crawler.settings)
+
+    def process_request(self, request, spider):
+        request.meta['proxy'] = random.choice(self.proxies)
+        print("use %s !!!!!!!!!!!!" % request.meta["proxy"])
