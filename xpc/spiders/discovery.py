@@ -4,35 +4,58 @@ import json
 import scrapy
 from scrapy import Request
 from ..items import PostItem, CommentItem, ComposerItem, CopyrightItem
+from scrapy_redis.spiders import RedisSpider
 
-
-class DiscoverySpider(scrapy.Spider):
+class DiscoverySpider(RedisSpider):
     name = 'discovery'
     allowed_domains = ['xinpianchang.com']
-    start_urls = ['http://www.xinpianchang.com/channel/index/sort-like']
+    # start_urls = ['http://www.xinpianchang.com/channel/index/sort-like']
+
+    # scrapy默认使用服务器返回的cookies，会修改settings中配置的kooies，
+    # scrapy根据response中的dont_merge_cookies属性判断是否使用配置文件中设置的headers信息
+    # 重写start——requests方法，在第一次请求的时候就会携带dont_merge_cookies属性
+    # def start_requests(self):
+    #     for url in self.start_urls:
+    #         request = Request(url, dont_filter=True)
+    #         request.meta['dont_merge_cookies'] = True
+    #         yield request
+
+    # 继承redisSpider 出现cookies还是被修改之后重写次方法
+    def make_requests_from_url(self, url):
+        request = Request(url, dont_filter=True)
+        request.meta["dont_merge_cookies"] = True
+        return request
 
     def parse(self, response):
         # 作品路径
         post_url = 'http://www.xinpianchang.com/a%s?from=ArticleList'
         # 主页中所有作品的信息级
         post_list = response.xpath('//ul[@class="video-list"]/li')
-        for i in range(5):
-            for post in post_list:
-                # 获取每个作品的id信息
-                pid = post.xpath('./@data-articleid').get()
-                # print(post_url % post)
-                # 发起每个详情页信息 请求
-                request = Request(post_url % pid, callback=self.parse_post)
-                # 将作品id 传入
-                request.meta['pid'] = pid
-                # Xpath
-                request.meta['thumbnail'] = post.xpath('./a/img/@_src').get()
-                # css
-                # 缩略图传递
-                # request.meta['thumbnail'] = post.css('a img::attr(src)').get()
-                # 持续时长
-                request.meta['duration'] = post.xpath('.//span[contains(@class, "duration")]/text()').get()
-                yield request
+        for post in post_list:
+            # 获取每个作品的id信息
+            pid = post.xpath('./@data-articleid').get()
+            # print(post_url % post)
+            # 发起每个详情页信息 请求
+            request = Request(post_url % pid, callback=self.parse_post)
+            # 将作品id 传入
+            request.meta['pid'] = pid
+            # Xpath
+            request.meta['thumbnail'] = post.xpath('./a/img/@_src').get()
+            # css
+            # 缩略图传递
+            # request.meta['thumbnail'] = post.css('a img::attr(src)').get()
+            # 持续时长
+            request.meta['duration'] = post.xpath('.//span[contains(@class, "duration")]/text()').get()
+            request.meta['dont_merge_cookies'] = True
+            yield request
+        # 作品列表页的下一页
+        next_page = response.xpath("//a[@title='下一页']/@href").get()
+        if next_page:
+            # 请求
+            request = Request(next_page, callback=self.parse)
+            # 携带这个属性，scrapy就不会删除sttings中配置的请求header信息
+            request.meta["dont_merge_cookies"] = True
+            yield request
 
     def parse_post(self, response):
         # print(response.text)
