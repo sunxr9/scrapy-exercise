@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from django.db import models
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     commentid = models.IntegerField(primary_key=True)
     pid = models.BigIntegerField()
     cid = models.BigIntegerField()
@@ -26,7 +26,7 @@ class Comments(models.Model):
         db_table = 'comments'
 
 
-class Composers(models.Model):
+class Composer(models.Model):
     cid = models.BigIntegerField(primary_key=True)
     banner = models.CharField(max_length=512)
     avatar = models.CharField(max_length=512)
@@ -44,7 +44,7 @@ class Composers(models.Model):
         db_table = 'composers'
 
 
-class Copyrights(models.Model):
+class Copyright(models.Model):
     pcid = models.CharField(primary_key=True, max_length=32)
     pid = models.BigIntegerField()
     cid = models.BigIntegerField()
@@ -55,7 +55,7 @@ class Copyrights(models.Model):
         db_table = 'copyrights'
 
 
-class Posts(models.Model):
+class Post(models.Model):
     pid = models.BigIntegerField(primary_key=True)
     title = models.CharField(max_length=256)
     thumbnail = models.CharField(max_length=512, blank=True, null=True)
