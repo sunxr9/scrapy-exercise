@@ -2,6 +2,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 from web.models import Post
 
+from web.models import Comment
+
 
 def show_list(request, page=1):
     cur_page = int(page)
@@ -26,4 +28,31 @@ def show_list(request, page=1):
         display_pages.insert(0, first_page)
     for post in posts:
         post.composers = post.get_composers()
+
+        # for composers in post.composers:
+        #     print('composers.values()', composers.values())
+        #     print(type(composers))
+        #     print('composers.avatar', composers['avatar'].values())
+        #     print("composer.cid", composers.cid)
+
     return render(request, 'post_list.html',  locals())
+
+
+def post_detail(request, pid):
+    post = Post.objects.get(pid=pid)
+    composers = post.get_composers()
+    return render(request, 'post_detail.html', {'post': post, 'composers': composers})
+
+
+def get_comments(request):
+    # 接受参数id ，page
+    pid = request.GET.get('id')
+    page = int(request.GET.get('page'))
+    comment_list = Comment.objects.filter(pid=pid).order_by('-created_at')
+    paginator = Paginator(comment_list, 10)
+    comments = paginator.page(page)
+    for comment in comments:
+        if comment.reply:
+            comment.reply = Comment.objects.get(commentid=comment.reply)
+    return render(request, 'comments.html', locals())
+
