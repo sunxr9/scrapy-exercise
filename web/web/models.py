@@ -10,6 +10,18 @@ from __future__ import unicode_literals
 from django.db import models
 
 
+class Code(models.Model):
+    code_id = models.BigAutoField(primary_key=True)
+    phone = models.BigIntegerField()
+    code = models.BigIntegerField()
+    created_at = models.DateTimeField()
+    ip = models.CharField(max_length=32)
+
+    class Meta:
+        managed = False
+        db_table = 'codes'
+
+
 class Comment(models.Model):
     commentid = models.IntegerField(primary_key=True)
     pid = models.BigIntegerField()
@@ -72,3 +84,22 @@ class Post(models.Model):
     class Meta:
         managed = False
         db_table = 'posts'
+
+    def get_composers(self):
+        cr_list = Copyright.objects.filter(pid=self.pid).all()
+        composers = []
+        for cr in cr_list:
+            composer = Composer.objects.filter(cid=cr.cid)
+            composer.roles = cr.roles
+            composers.append(composer)
+            # print('composers', composers)
+        # print('composers"111111111"', composers)
+        return composers
+
+    def backgroud(self):
+        return '%s@960w_540h_50-30bl_1e_1c' % self.raw_image
+
+    def raw_image(self):
+        if self.preview:
+            return self.preview.split('@')[0]
+        return ''
