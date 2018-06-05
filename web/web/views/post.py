@@ -1,8 +1,24 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render
+from django.utils.functional import cached_property
 from web.models import Post
-
 from web.models import Comment
+
+import redis
+r = redis.Redis()
+
+
+@cached_property
+def count(self):
+    cache_key = 'post_counts'
+    cache_counts = r.get(cache_key)
+    if not cache_counts:
+        cache_counts = self.object_list.count()
+        r.setex(cache_key, cache_counts, 60 * 5)
+    return int(cache_counts)
+
+
+Paginator.count = count
 
 
 def show_list(request, page=1):
@@ -39,7 +55,7 @@ def show_list(request, page=1):
 
 
 def post_detail(request, pid):
-    post = Post.objects.get(pid=pid)
+    post = Post.get(pid=pid)
     composers = post.get_composers()
     return render(request, 'post_detail.html', {'post': post, 'composers': composers})
 
@@ -53,6 +69,6 @@ def get_comments(request):
     comments = paginator.page(page)
     for comment in comments:
         if comment.reply:
-            comment.reply = Comment.objects.get(commentid=comment.reply)
+            comment.reply = Comment.get(commentid=comment.reply)
     return render(request, 'comments.html', locals())
 
