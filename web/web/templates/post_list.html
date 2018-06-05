@@ -877,23 +877,23 @@ sa.quick('autoTrack');
                     <div class="user-info">
                     {% if post.composers|length > 1 %}
                         <a class="user-link v-center no-creator-space" href="javascript:;" data-userid="10000649">
-							<span class="authors-head-wrap" data-userid="{{post.composers.0.cid}}">
+							<span class="authors-head-wrap" data-userid="{{post.composers.cid}}">
                             {% for composer in post.composers %}
-                                <img class="half half-r" src="{{ composer.0.avatar }}" alt="">
+                                <img class="half half-r" src="{{ composer.avatar }}" alt="">
 						    {% endfor %}
                             </span>
                             <span class="name fs_12 fw_300 c_b_3 v-center line-hide-1">
                             {{post.composers|length}}位创作人
                             </span>
                         </a>
-                        <span class="role fs_12 fw_300 c_b_9 v-center line-hide-1">{{post.composers.0.roles}}</span>
+                        <span class="role fs_12 fw_300 c_b_9 v-center line-hide-1">{{post.composers.roles}}</span>
                         <div class="authors-wrap">
                             <ul class="authors-list">
                                 {% for composer in post.composers %}
-                                <li class="head-wrap" data-userid="{{composer.0.cid}}">
-                                    <a href="/u{{composer.0.cid}}" target="_blank">
+                                <li class="head-wrap" data-userid="{{composer.cid}}">
+                                    <a href="/u{{composer.cid}}" target="_blank">
 										<span class="avator-wrap">
-											<img class="avator" src="{{composer.0.avatar}}" alt="">
+											<img class="avator" src="{{composer.avatar}}" alt="">
                                             <span class="author-v yellow-v"></span>
                                         </span>
                                         <div class="info">
@@ -906,7 +906,7 @@ sa.quick('autoTrack');
                             </ul>
                         </div>
                     {% else %}
-                        <a class="user-link v-center enter-creator-space" href="javascript:;" data-userid="{{post.composers.0.cid}}">
+                        <a class="user-link v-center enter-creator-space" href="javascript:;" data-userid="{{post.composers.cid}}">
 
 
                             <!--<span class="head-wrap" data-userid="{{post.composers.0.cid}}">-->
@@ -920,17 +920,17 @@ sa.quick('autoTrack');
 
 
                             {% for composer in post.composers %}}
-                            <span class="head-wrap" data-userid="{{composer.0.cid}}">
+                            <span class="head-wrap" data-userid="{{composer.cid}}">
                                 <img class="avator v-center"
-                                     src="{{composer.0.avatar}}">
+                                     src="{{composer.avatar}}">
                                         <span class="author-v blue-v"></span>
                             </span>
                             <span class="name fs_12 fw_300 c_b_3 v-center line-hide-1">
-                                {{composer.0.name}}
+                                {{composer.name}}
                             </span>
                             {% endfor %}
                         </a>
-                        <span class="role fs_12 fw_300 c_b_9 v-center line-hide-1">{{post.composers.0.roles}}</span>
+                        <span class="role fs_12 fw_300 c_b_9 v-center line-hide-1">{{post.composers.roles}}</span>
                     {% endif %}
                     </div>
                 </div>

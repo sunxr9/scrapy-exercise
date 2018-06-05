@@ -893,16 +893,16 @@ sa.quick('autoTrack');
                     <ul class="creator-list">
                         {% for composer in composers %}
                         <li>
-                            <a href="/u{{composer.0.cid}}?from=articleList" target="_black" class="head-wrap"
+                            <a href="/u{{composer.cid}}?from=articleList" target="_black" class="head-wrap"
                                data-userid="{{composer.0.cid}}">
                                 <img class="avator lazy-img"
-                                     _src="{{composer.0.avatar}}">
+                                     _src="{{composer.avatar}}">
                                 <span class="author-v yellow-v"></span>
                             </a>
                             <div class="creator-info">
-                                <a class="name-wrap" href="/u{{composer.0.cid}}?from=articleList"><span
-                                        class="name fs_14 fw_600 c_b_3 line-hide-1">{{composer.0.name}}</span></a>
-                                <span class="roles fs_12 fw_300 c_b_9">{{composer.0.roles}}</span>
+                                <a class="name-wrap" href="/u{{composer.cid}}?from=articleList"><span
+                                        class="name fs_14 fw_600 c_b_3 line-hide-1">{{composer.name}}</span></a>
+                                <span class="roles fs_12 fw_300 c_b_9">{{composer.roles}}</span>
                             </div>
                             <div class="follow-btn fs_12 c_w_f bg-red " data-userid="{{composer.cid}}" data-username="{{composer.name}}">关注
                             </div>
