@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.contrib import admin
 from web.views import post, composer
 
@@ -23,5 +23,14 @@ urlpatterns = [
     url(r'^post/list/(?P<page>\d+)/$', post.show_list),
     url(r'^user/oneuser/userid-(?P<cid>\d+)$', composer.oneuser),
     url(r'^a(?P<pid>\d+)', post.post_detail),
-    url(r'^article/filmplay/ts-getCommentApi$', post.get_comments)
+    url(r'^article/filmplay/ts-getCommentApi$', post.get_comments),
+    url(r'^u(?P<cid>\d+)', composer.homepage),
 ]
+
+from django.conf import settings
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
