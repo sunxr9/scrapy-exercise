@@ -6,11 +6,28 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
+import pickle
 
 from django.db import models
+import redis
+r = redis.Redis()
 
 
-class Code(models.Model):
+class Model(object):
+    @classmethod
+    def get(cls, **kwargs):
+        pass
+        cache_key = '%s - %s' % (cls.__name__, next(iter(kwargs.values())))
+        cache_obj = r.get(cache_key)
+        if not cache_obj:
+            cache_obj = cls.objects.get(**kwargs)
+            r.set(cache_key, pickle.dumps(cache_obj))
+        else:
+            cache_obj = pickle.loads(cache_obj)
+        return cache_obj
+
+
+class Code(models.Model, Model):
     code_id = models.BigAutoField(primary_key=True)
     phone = models.BigIntegerField()
     code = models.BigIntegerField()
@@ -22,7 +39,7 @@ class Code(models.Model):
         db_table = 'codes'
 
 
-class Comment(models.Model):
+class Comment(models.Model, Model):
     commentid = models.IntegerField(primary_key=True)
     pid = models.BigIntegerField()
     cid = models.BigIntegerField()
@@ -38,7 +55,7 @@ class Comment(models.Model):
         db_table = 'comments'
 
 
-class Composer(models.Model):
+class Composer(models.Model, Model):
     cid = models.BigIntegerField(primary_key=True)
     banner = models.CharField(max_length=512)
     avatar = models.CharField(max_length=512)
@@ -55,8 +72,21 @@ class Composer(models.Model):
         managed = False
         db_table = 'composers'
 
+    def get_posts(self, num=0):
+        if num:
+            cr_list = Copyright.objects.filter(cid=self.cid)[:num]
+        else:
+            cr_list = Copyright.objects.filter(cid=self.cid).all()
+        posts = []
+        for cr in cr_list:
+            post = Post.get(pid=cr.pid)
+            # print(dir(cr))
+            post.roles = cr.roles
+            posts.append(post)
+        return posts
 
-class Copyright(models.Model):
+
+class Copyright(models.Model, Model):
     pcid = models.CharField(primary_key=True, max_length=32)
     pid = models.BigIntegerField()
     cid = models.BigIntegerField()
@@ -67,7 +97,7 @@ class Copyright(models.Model):
         db_table = 'copyrights'
 
 
-class Post(models.Model):
+class Post(models.Model, Model):
     pid = models.BigIntegerField(primary_key=True)
     title = models.CharField(max_length=256)
     thumbnail = models.CharField(max_length=512, blank=True, null=True)
@@ -89,16 +119,18 @@ class Post(models.Model):
         cr_list = Copyright.objects.filter(pid=self.pid).all()
         composers = []
         for cr in cr_list:
-            composer = Composer.objects.filter(cid=cr.cid)
+            composer = Composer.get(cid=cr.cid)
             composer.roles = cr.roles
             composers.append(composer)
             # print('composers', composers)
         # print('composers"111111111"', composers)
         return composers
 
+    @property
     def backgroud(self):
         return '%s@960w_540h_50-30bl_1e_1c' % self.raw_image
 
+    @property
     def raw_image(self):
         if self.preview:
             return self.preview.split('@')[0]
