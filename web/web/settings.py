@@ -27,9 +27,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+INTERNAL_IPS = ['127.0.0.1']
 
 # Application definition
-
+DEBUG_TOOLBAR_CONFIG = {
+    'JQUERY_URL': 'https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js',
+    # 'INSERT_BEFORE': '</li>',
+}
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'web',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'web.urls'
@@ -81,7 +87,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'sunxr1996',
         'PORT': 3306,
-        'HOST': '47.100.185.114',
+        'HOST': '127.0.0.1',
         'CHARSET': 'utf8mb4',
     }
 }
