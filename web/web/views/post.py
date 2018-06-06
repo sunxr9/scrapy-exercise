@@ -1,3 +1,5 @@
+from hashlib import md5
+
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.utils.functional import cached_property
@@ -10,7 +12,9 @@ r = redis.Redis()
 
 @cached_property
 def count(self):
-    cache_key = 'post_counts'
+    sql, params = self.object_list.query.sql_with_params()
+    sql = sql % params
+    cache_key = md5(sql.encode('utf-8')).hexdigest()
     cache_counts = r.get(cache_key)
     if not cache_counts:
         cache_counts = self.object_list.count()
