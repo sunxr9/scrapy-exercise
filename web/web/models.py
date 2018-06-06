@@ -73,17 +73,18 @@ class Composer(models.Model, Model):
         db_table = 'composers'
 
     def get_posts(self, num=0):
-        if num:
-            cr_list = Copyright.objects.filter(cid=self.cid)[:num]
-        else:
+        cache_key = "cr_post_%s" %self.cid
+        post = [pickle.loads(i) for i in r.lrange(cache_key, 0, -1)]
+        if not post:
             cr_list = Copyright.objects.filter(cid=self.cid).all()
-        posts = []
-        for cr in cr_list:
-            post = Post.get(pid=cr.pid)
-            # print(dir(cr))
-            post.roles = cr.roles
-            posts.append(post)
-        return posts
+            posts = []
+            for cr in cr_list:
+                post = Post.get(pid=cr.pid)
+                # print(dir(cr))
+                post.roles = cr.roles
+                posts.append(post)
+                r.lpush(cache_key, post)
+        return post[:num or -1]
 
 
 class Copyright(models.Model, Model):
@@ -116,14 +117,18 @@ class Post(models.Model, Model):
         db_table = 'posts'
 
     def get_composers(self):
-        cr_list = Copyright.objects.filter(pid=self.pid).all()
-        composers = []
-        for cr in cr_list:
-            composer = Composer.get(cid=cr.cid)
-            composer.roles = cr.roles
-            composers.append(composer)
-            # print('composers', composers)
-        # print('composers"111111111"', composers)
+        cache_key = 'cr_composer_%s' % self.pid
+        composers = [pickle.loads(i) for i in r.lrange(cache_key, 0, -1)]
+        if not composers:
+            cr_list = Copyright.objects.filter(pid=self.pid).all()
+            composers = []
+            for cr in cr_list:
+                composer = Composer.get(cid=cr.cid)
+                composer.roles = cr.roles
+                composers.append(composer)
+                r.lpush(cache_key, pickle.dumps(composer))
+                # print('composers', composers)
+            # print('composers"111111111"', composers)
         return composers
 
     @property
